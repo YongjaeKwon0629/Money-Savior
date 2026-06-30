@@ -1,10 +1,23 @@
-﻿{
+{
   "name": "money-coach",
   "private": true,
   "packageManager": "pnpm@11.8.0",
   "scripts": {
+    "dev": "pnpm dev:web",
     "dev:web": "pnpm --filter web dev",
-    "dev:api": "pnpm --filter api start:dev"
+    "dev:api": "pnpm --filter api start:dev",
+    "build": "pnpm build:web && pnpm build:api",
+    "build:web": "pnpm --filter web build",
+    "build:api": "pnpm --filter api build",
+    "lint": "pnpm lint:web && pnpm lint:api",
+    "lint:web": "pnpm --filter web lint",
+    "lint:api": "pnpm --filter api lint",
+    "test": "pnpm test:api:e2e",
+    "test:api": "pnpm --filter api test",
+    "test:api:e2e": "pnpm --filter api test:e2e",
+    "typecheck": "pnpm typecheck:web && pnpm typecheck:api",
+    "typecheck:web": "pnpm --filter web exec tsc -p tsconfig.json --noEmit --incremental false",
+    "typecheck:api": "pnpm --filter api exec tsc -p tsconfig.json --noEmit --incremental false"
   },
   "type": "module"
 }
