@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SavingGoal {
+  EMERGENCY_FUND
+  LIFE_STABILITY
+  TRAVEL
+  HOUSING_MARRIAGE
+  INVESTMENT_PREP
+}
+
+enum SavingPreference {
+  STABLE
+  BALANCED
+  AGGRESSIVE
+}
+
+enum SavingsCapacityLevel {
+  DEFICIT
+  LOW
+  MID
+  HIGH
+}
+
+enum EmergencyFundStatus {
+  NONE
+  INSUFFICIENT
+  SUFFICIENT
+}
+
+enum RecommendationType {
+  EXPENSE_CONTROL
+  LIQUIDITY_FIRST
+  STABLE_SAVING
+  BALANCED_SAVING
+  DIVERSIFIED_ALLOCATION
+}
+
+enum LedgerEntryType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id                       Int                       @id @default(autoincrement())
+  email                    String                    @unique @db.VarChar(255)
+  passwordHash             String                    @db.VarChar(255)
+  name                     String                    @db.VarChar(50)
+  refreshTokenHash         String?                   @db.VarChar(255)
+  lastLoginAt              DateTime?
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  monthlyFinanceInputs     MonthlyFinanceInput[]
+  ledgerEntries            LedgerEntry[]
+  savedRecommendationPlans SavedRecommendationPlan[]
+
+  @@map("users")
+}
+
+model MonthlyFinanceInput {
+  id                   Int                  @id @default(autoincrement())
+  userId               Int
+  targetMonth          String               @db.VarChar(7)
+  monthlyIncome        Int
+  paydayDay            Int
+  fixedExpense         Int
+  variableExpense      Int
+  emergencyFundAmount  Int
+  savingGoal           SavingGoal
+  savingPreference     SavingPreference
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  user                 User                 @relation(fields: [userId], references: [id])
+  recommendationResult RecommendationResult?
+  savedRecommendationPlans SavedRecommendationPlan[]
+
+  @@unique([userId, targetMonth])
+  @@map("monthly_finance_inputs")
+}
+
+model RecommendationResult {
+  id                        Int                  @id @default(autoincrement())
+  monthlyFinanceInputId     Int                  @unique
+  surplusAmount             Int
+  fixedExpenseRatio         Decimal              @db.Decimal(5, 2)
+  livingCostBase            Int
+  emergencyFundTarget       Int
+  emergencyFundRatio        Decimal              @db.Decimal(7, 2)
+  savingsCapacityLevel      SavingsCapacityLevel
+  emergencyFundStatus       EmergencyFundStatus
+  recommendedType           RecommendationType
+  safeSavingAmount          Int
+  recommendedSavingAmount   Int
+  challengeSavingAmount     Int
+  parkingAccountAmount      Int                  @default(0)
+  installmentSavingsAmount  Int                  @default(0)
+  isaAmount                 Int                  @default(0)
+  investmentAmount          Int                  @default(0)
+  recommendationReason1     String?              @db.VarChar(255)
+  recommendationReason2     String?              @db.VarChar(255)
+  recommendationReason3     String?              @db.VarChar(255)
+  cautionMessage1           String?              @db.VarChar(255)
+  cautionMessage2           String?              @db.VarChar(255)
+  exceptionCode             String?              @db.VarChar(20)
+  createdAt                 DateTime             @default(now())
+  updatedAt                 DateTime             @updatedAt
+  monthlyFinanceInput       MonthlyFinanceInput  @relation(fields: [monthlyFinanceInputId], references: [id])
+  savedRecommendationPlans  SavedRecommendationPlan[]
+
+  @@map("recommendation_results")
+}
+
+model SavedRecommendationPlan {
+  id                     Int                  @id @default(autoincrement())
+  userId                 Int
+  monthlyFinanceInputId  Int
+  recommendationResultId Int
+  targetMonth            String               @db.VarChar(7)
+  recommendedType        RecommendationType
+  recommendedSavingAmount Int
+  surplusAmount          Int
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  user                   User                 @relation(fields: [userId], references: [id])
+  monthlyFinanceInput    MonthlyFinanceInput  @relation(fields: [monthlyFinanceInputId], references: [id])
+  recommendationResult   RecommendationResult @relation(fields: [recommendationResultId], references: [id])
+
+  @@unique([userId, monthlyFinanceInputId])
+  @@map("saved_recommendation_plans")
+}
+
+model LedgerEntry {
+  id          Int             @id @default(autoincrement())
+  userId      Int
+  targetMonth String          @db.VarChar(7)
+  entryDate   DateTime
+  type        LedgerEntryType
+  category    String          @db.VarChar(50)
+  amount      Int
+  memo        String?         @db.VarChar(255)
+  isFixed     Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  user        User            @relation(fields: [userId], references: [id])
+
+  @@index([userId, targetMonth, entryDate])
+  @@map("ledger_entries")
+}

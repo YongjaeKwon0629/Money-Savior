@@ -1,0 +1,10 @@
+﻿{
+  "name": "money-coach",
+  "private": true,
+  "packageManager": "pnpm@11.8.0",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api start:dev"
+  },
+  "type": "module"
+}
